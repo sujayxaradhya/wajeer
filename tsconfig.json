@@ -1,0 +1,6 @@
+{
+  "extends": "@wajeer/config/tsconfig.base.json",
+  "compilerOptions": {
+    "strictNullChecks": true
+  }
+}
