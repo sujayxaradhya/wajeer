@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "streamable-http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ctx7sk-07e5b29c-deec-48fa-bf99-eb2b60459a3a"
+      },
+      "alwaysAllow": [],
+      "disabled": false
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": ["npx", "-y", "chrome-devtools-mcp@latest"],
+      "alwaysAllow": [],
+      "disabled": true
+    },
+    "figma-dev-mode": {
+      "type": "sse",
+      "url": "http://127.0.0.1:3845/sse",
+      "alwaysAllow": [
+        "get_design_context",
+        "get_variable_defs",
+        "get_screenshot",
+        "get_metadata"
+      ],
+      "disabled": false
+    },
+    "context-mode": {
+      "command": "context-mode"
+    },
+    "icons0": {
+      "url": "https://icons0.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer i0_87a9bf92d639_k2yKuG2aGTPVn12mrzmSt0HTvoYUXVuS"
+      },
+      "disabled": true,
+      "alwaysAllow": []
+    }
+  }
+}

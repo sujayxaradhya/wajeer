@@ -9,4 +9,15 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react/jsx-runtime"],
+          router: ["@tanstack/react-router", "@tanstack/react-query"],
+          gsap: ["gsap", "@gsap/react"],
+        },
+      },
+    },
+  },
 });

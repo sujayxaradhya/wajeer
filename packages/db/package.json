@@ -1,0 +1,26 @@
+{
+  "name": "@wajeer/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./live-queries": "./src/live-queries.ts"
+  },
+  "scripts": {
+    "migrate": "bun run ./migrate.ts"
+  },
+  "dependencies": {
+    "kysely": "catalog:",
+    "kysely-surrealdb": "catalog:",
+    "surrealdb": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@wajeer/config": "workspace:*",
+    "@wajeer/env": "workspace:*",
+    "dotenv": "catalog:",
+    "typescript": "^5"
+  }
+}

@@ -11,6 +11,7 @@
   },
   "scripts": {},
   "dependencies": {
+    "@wajeer/db": "workspace:*",
     "@wajeer/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",

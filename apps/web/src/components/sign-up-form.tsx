@@ -1,159 +1,223 @@
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@wajeer/ui/components/button";
+import { FieldError, FieldLabel } from "@wajeer/ui/components/field";
 import { Input } from "@wajeer/ui/components/input";
-import { Label } from "@wajeer/ui/components/label";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-import Loader from "./loader";
+const validateName = ({ value }: { value: string }) => {
+  if (!value) {
+    return "Name is required";
+  }
+  if (value.length < 2) {
+    return "Name must be at least 2 characters";
+  }
+  return;
+};
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
-  const navigate = useNavigate({
-    from: "/",
-  });
-  const { isPending } = authClient.useSession();
+const validateEmail = ({ value }: { value: string }) => {
+  if (!value) {
+    return "Email is required";
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return "Invalid email address";
+  }
+  return;
+};
+
+const validatePassword = ({ value }: { value: string }) => {
+  if (!value) {
+    return "Password is required";
+  }
+  if (value.length < 8) {
+    return "Password must be at least 8 characters";
+  }
+  return;
+};
+
+export default function SignUpForm({
+  onSwitchToSignIn,
+}: {
+  onSwitchToSignIn: () => void;
+}) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [authPending, setAuthPending] = useState(false);
 
   const form = useForm({
     defaultValues: {
+      name: "",
       email: "",
       password: "",
-      name: "",
     },
     onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        {
+      setAuthPending(true);
+      try {
+        const { data, error } = await authClient.signUp.email({
           email: value.email,
           password: value.password,
           name: value.name,
-        },
-        {
-          onSuccess: () => {
-            navigate({
-              to: "/dashboard",
-            });
-            toast.success("Sign up successful");
-          },
-          onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
-          },
-        },
-      );
-    },
-    validators: {
-      onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+        });
+
+        if (error) {
+          toast.error(error.message ?? "Sign up failed");
+          return;
+        }
+
+        if (data?.user) {
+          toast.success("Account created!");
+          window.location.href = "/dashboard";
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Sign up failed";
+        toast.error(message);
+      } finally {
+        setAuthPending(false);
+      }
     },
   });
 
-  if (isPending) {
-    return <Loader />;
-  }
+  const isSubmitting = form.state.isSubmitting || authPending;
 
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Create Account</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2 text-center">
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          Create an account
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Enter your details to get started
+        </p>
+      </div>
 
       <form
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          form.handleSubmit();
+          void form.handleSubmit();
         }}
-        className="space-y-4"
       >
-        <div>
-          <form.Field name="name">
+        <div className="flex flex-col gap-4">
+          <form.Field name="name" validators={{ onBlur: validateName }}>
             {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Name</Label>
+              <div className="flex flex-col gap-2">
+                <FieldLabel htmlFor="signup-name">Name</FieldLabel>
                 <Input
-                  id={field.name}
-                  name={field.name}
+                  id="signup-name"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) => field.handleChange(e.currentTarget.value)}
+                  placeholder="Your name"
+                  autoComplete="name"
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  disabled={isSubmitting}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
+                {field.state.meta.errors.map((error, i) => (
+                  <FieldError key={i}>{String(error)}</FieldError>
                 ))}
               </div>
             )}
           </form.Field>
-        </div>
 
-        <div>
-          <form.Field name="email">
+          <form.Field name="email" validators={{ onBlur: validateEmail }}>
             {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Email</Label>
+              <div className="flex flex-col gap-2">
+                <FieldLabel htmlFor="signup-email">Email</FieldLabel>
                 <Input
-                  id={field.name}
-                  name={field.name}
+                  id="signup-email"
                   type="email"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) => field.handleChange(e.currentTarget.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  disabled={isSubmitting}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
+                {field.state.meta.errors.map((error, i) => (
+                  <FieldError key={i}>{String(error)}</FieldError>
                 ))}
               </div>
             )}
           </form.Field>
-        </div>
 
-        <div>
-          <form.Field name="password">
+          <form.Field name="password" validators={{ onBlur: validatePassword }}>
             {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="password"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
+              <div className="flex flex-col gap-2">
+                <FieldLabel htmlFor="signup-password">Password</FieldLabel>
+                <div className="relative">
+                  <Input
+                    id="signup-password"
+                    type={showPassword ? "text" : "password"}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.currentTarget.value)}
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    aria-invalid={field.state.meta.errors.length > 0}
+                    disabled={isSubmitting}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
+                </div>
+                {field.state.meta.errors.map((error, i) => (
+                  <FieldError key={i}>{String(error)}</FieldError>
                 ))}
               </div>
             )}
           </form.Field>
-        </div>
 
-        <form.Subscribe
-          selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
-        >
-          {({ canSubmit, isSubmitting }) => (
-            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Sign Up"}
-            </Button>
-          )}
-        </form.Subscribe>
+          <form.Subscribe
+            selector={(state) => ({
+              canSubmit: state.canSubmit,
+            })}
+          >
+            {({ canSubmit }) => (
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!canSubmit || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  "Sign Up"
+                )}
+              </Button>
+            )}
+          </form.Subscribe>
+        </div>
       </form>
 
-      <div className="mt-4 text-center">
-        <Button
-          variant="link"
+      <div className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <button
+          type="button"
           onClick={onSwitchToSignIn}
-          className="text-indigo-600 hover:text-indigo-800"
+          className="text-primary underline underline-offset-4 hover:text-primary/80"
         >
-          Already have an account? Sign In
-        </Button>
+          Sign in
+        </button>
       </div>
     </div>
   );
