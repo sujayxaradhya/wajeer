@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 import type { Business } from "@wajeer/db";
 import { z } from "zod";
 
@@ -14,15 +14,15 @@ export const createBusiness = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const validated = createBusinessSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
 
     const [, , business] = await db.query<[null, unknown, Business]>(
       `LET $biz = (CREATE business CONTENT {
          name: $name,
-         owner_id: type::record($userId)
+         owner_id: $userId
        } RETURN *)[0];
        CREATE user_business CONTENT {
-         user_id: type::record($userId),
+         user_id: $userId,
          business_id: $biz.id,
          role: 'owner',
          trust_score: 4.5,
@@ -40,11 +40,11 @@ export const getMyBusinesses = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
 
     const [businesses] = await db.query<[Business[]]>(
       `SELECT * FROM business WHERE id IN (
-         SELECT VALUE business_id FROM user_business WHERE user_id = type::record($userId)
+         SELECT VALUE business_id FROM user_business WHERE user_id = $userId
        )`,
       { userId }
     );
@@ -61,15 +61,16 @@ export const getBusiness = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const validated = getBusinessSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const businessId = toRecordId(validated.business_id, "business");
 
     const [businesses] = await db.query<[Business[]]>(
       `SELECT * FROM business
-       WHERE id = type::record($businessId)
+       WHERE id = $businessId
        AND id IN (
-         SELECT VALUE business_id FROM user_business WHERE user_id = type::record($userId)
+         SELECT VALUE business_id FROM user_business WHERE user_id = $userId
        )`,
-      { businessId: validated.business_id, userId }
+      { businessId, userId }
     );
 
     if (!businesses[0]) {
@@ -87,11 +88,12 @@ export const deleteBusiness = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const validated = deleteBusinessSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const businessId = toRecordId(validated.business_id, "business");
 
     const [bizRows] = await db.query<[{ id: string }[]]>(
-      `SELECT id FROM business WHERE id = type::record($businessId) AND owner_id = type::record($userId)`,
-      { businessId: validated.business_id, userId }
+      `SELECT id FROM business WHERE id = $businessId AND owner_id = $userId`,
+      { businessId, userId }
     );
 
     if (!bizRows[0]) {
@@ -99,9 +101,9 @@ export const deleteBusiness = createServerFn({ method: "POST" })
     }
 
     await db.query(
-      `DELETE user_business WHERE business_id = type::record($businessId);
-       DELETE type::record($businessId)`,
-      { businessId: validated.business_id }
+      `DELETE user_business WHERE business_id = $businessId;
+       DELETE $businessId`,
+      { businessId }
     );
 
     return { success: true };

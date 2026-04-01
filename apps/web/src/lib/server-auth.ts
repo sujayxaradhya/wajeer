@@ -1,6 +1,6 @@
 import { getRequest } from "@tanstack/react-start/server";
 import { auth } from "@wajeer/auth";
-import { RecordId } from "surrealdb";
+import { RecordId } from "@wajeer/db";
 
 function normalizeUserId(value: unknown): string | null {
   if (!value) return null;

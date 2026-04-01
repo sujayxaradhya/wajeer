@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@wajeer/auth";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 
 export const Route = createFileRoute("/api/shifts/")({
   server: {
@@ -15,19 +15,19 @@ export const Route = createFileRoute("/api/shifts/")({
         }
 
         const url = new URL(request.url);
-        const locationId = url.searchParams.get("locationId");
+        const locationIdParam = url.searchParams.get("locationId");
         const status = url.searchParams.get("status");
         const role = url.searchParams.get("role");
-        const userId = session.user.id;
+        const userId = toRecordId(session.user.id, "user");
 
         const conditions: string[] = [
-          `location_id IN (SELECT VALUE id FROM location WHERE business_id IN (SELECT VALUE business_id FROM user_business WHERE user_id = type::record($userId)))`,
+          `location_id IN (SELECT VALUE id FROM location WHERE business_id IN (SELECT VALUE business_id FROM user_business WHERE user_id = $userId))`,
         ];
-        const params: Record<string, string> = { userId };
+        const params: Record<string, unknown> = { userId };
 
-        if (locationId) {
-          conditions.push("location_id = type::record($locationId)");
-          params.locationId = locationId;
+        if (locationIdParam) {
+          conditions.push("location_id = $locationId");
+          params.locationId = toRecordId(locationIdParam, "location");
         }
         if (status) {
           conditions.push("status = $status");

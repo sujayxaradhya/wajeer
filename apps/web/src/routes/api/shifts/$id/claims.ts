@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@wajeer/auth";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 
 export const Route = createFileRoute("/api/shifts/$id/claims")({
   server: {
@@ -14,19 +14,19 @@ export const Route = createFileRoute("/api/shifts/$id/claims")({
           return new Response("Unauthorized", { status: 401 });
         }
 
-        const userId = session.user.id;
-        const shiftId = params.id;
+        const userId = toRecordId(session.user.id, "user");
+        const shiftId = toRecordId(params.id, "shift");
         const db = await getSurreal();
 
         const [bizOwnerRows, ubRows] = await db.query<
           [{ id: string }[], { id: string }[]]
         >(
           `SELECT id FROM business
-           WHERE id = (SELECT VALUE location_id.business_id FROM shift WHERE id = type::record($shiftId))[0]
-           AND owner_id = type::record($userId);
+           WHERE id = (SELECT VALUE location_id.business_id FROM shift WHERE id = $shiftId)[0]
+           AND owner_id = $userId;
            SELECT id FROM user_business
-           WHERE business_id = (SELECT VALUE location_id.business_id FROM shift WHERE id = type::record($shiftId))[0]
-           AND user_id = type::record($userId)
+           WHERE business_id = (SELECT VALUE location_id.business_id FROM shift WHERE id = $shiftId)[0]
+           AND user_id = $userId
            AND role IN ['owner', 'manager']`,
           { shiftId, userId }
         );
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/api/shifts/$id/claims")({
           `SELECT *,
              worker_id.name AS worker_name,
              worker_id.trust_score AS worker_trust_score
-           FROM claim WHERE shift_id = type::record($shiftId)`,
+           FROM claim WHERE shift_id = $shiftId`,
           { shiftId }
         );
 

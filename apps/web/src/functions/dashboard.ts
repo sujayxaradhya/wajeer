@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 
 import { getAuthenticatedUserId } from "@/lib/server-auth";
 
@@ -9,7 +9,8 @@ type ClaimRow = Record<string, string | number | boolean | null>;
 export const getDashboardStats = createServerFn({ method: "GET" }).handler(
   async () => {
     const db = await getSurreal();
-    const userId = await getAuthenticatedUserId();
+    const rawUserId = await getAuthenticatedUserId();
+    const userId = toRecordId(rawUserId, "user");
 
     const [myShifts, pendingClaims, availableShiftsCount, userRows] =
       await db.query<
@@ -17,16 +18,16 @@ export const getDashboardStats = createServerFn({ method: "GET" }).handler(
       >(
         `
       SELECT *,
-        (SELECT name FROM location WHERE id = type::record($parent.location_id))[0] AS location_name
+        location_id.name AS location_name
       FROM shift
-      WHERE posted_by = type::record($userId)
+      WHERE posted_by = $userId
       ORDER BY created_at DESC;
 
       SELECT *,
-        (SELECT title FROM shift WHERE id = type::record($parent.shift_id))[0] AS shift_title,
-        (SELECT date FROM shift WHERE id = type::record($parent.shift_id))[0] AS shift_date
+        shift_id.title AS shift_title,
+        shift_id.date AS shift_date
       FROM claim
-      WHERE worker_id = type::record($userId) AND status = "pending";
+      WHERE worker_id = $userId AND status = "pending";
 
       SELECT count() AS count FROM shift
       WHERE status = "open"
@@ -34,12 +35,12 @@ export const getDashboardStats = createServerFn({ method: "GET" }).handler(
         SELECT VALUE id FROM location
         WHERE business_id IN (
           SELECT VALUE business_id FROM user_business
-          WHERE user_id = type::record($userId) AND role = "worker"
+          WHERE user_id = $userId AND role = "worker"
         )
       )
       GROUP ALL;
 
-      SELECT trust_score FROM user WHERE id = type::record($userId);
+      SELECT trust_score FROM user WHERE id = $userId;
       `,
         { userId }
       );
@@ -52,28 +53,27 @@ export const getDashboardStats = createServerFn({ method: "GET" }).handler(
       recentShifts: normalizeRecord<ShiftRow[]>(myShifts.slice(0, 5)),
       pendingClaims: normalizeRecord<ClaimRow[]>(pendingClaims),
     };
-  });
+  }
+);
 
 export const getMyShifts = createServerFn({ method: "GET" }).handler(
   async () => {
     const db = await getSurreal();
-    const userId = await getAuthenticatedUserId();
+    const rawUserId = await getAuthenticatedUserId();
+    const userId = toRecordId(rawUserId, "user");
 
     const [shifts] = await db.query<[ShiftRow[]]>(
       `
       SELECT *,
-        (SELECT name FROM location WHERE id = type::record($parent.location_id))[0] AS location_name,
-        (SELECT name FROM business
-          WHERE id = type::record(
-            (SELECT business_id FROM location WHERE id = type::record($parent.location_id))[0].business_id
-          )
-        )[0] AS business_name
+        location_id.name AS location_name,
+        location_id.business_id.name AS business_name
       FROM shift
-      WHERE posted_by = type::record($userId)
+      WHERE posted_by = $userId
       ORDER BY created_at DESC
       `,
       { userId }
     );
 
     return normalizeRecord<ShiftRow[]>(shifts);
-  });
+  }
+);

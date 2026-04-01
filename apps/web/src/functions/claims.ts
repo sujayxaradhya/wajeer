@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 import type { Claim } from "@wajeer/db";
 import { z } from "zod";
 
@@ -14,11 +14,12 @@ export const getClaimsForShift = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const validated = getClaimsForShiftSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const shiftId = toRecordId(validated.shift_id, "shift");
 
     const [shiftRows] = await db.query<[{ business_id: string }[]]>(
-      `SELECT location_id.business_id AS business_id FROM shift WHERE id = type::record($shiftId)`,
-      { shiftId: validated.shift_id }
+      `SELECT location_id.business_id AS business_id FROM shift WHERE id = $shiftId`,
+      { shiftId }
     );
 
     const businessId = shiftRows[0]?.business_id;
@@ -26,15 +27,17 @@ export const getClaimsForShift = createServerFn({ method: "GET" })
       throw new Error("Shift not found");
     }
 
+    const bizRecordId = toRecordId(businessId, "business");
+
     const [bizOwnerRows, ubRows] = await db.query<
       [{ id: string }[], { id: string }[]]
     >(
-      `SELECT id FROM business WHERE id = type::record($businessId) AND owner_id = type::record($userId);
+      `SELECT id FROM business WHERE id = $businessId AND owner_id = $userId;
        SELECT id FROM user_business
-         WHERE business_id = type::record($businessId)
-         AND user_id = type::record($userId)
+         WHERE business_id = $businessId
+         AND user_id = $userId
          AND role IN ['owner', 'manager']`,
-      { businessId, userId }
+      { businessId: bizRecordId, userId }
     );
 
     if (!bizOwnerRows[0] && !ubRows[0]) {
@@ -47,8 +50,8 @@ export const getClaimsForShift = createServerFn({ method: "GET" })
       `SELECT *,
          worker_id.name AS worker_name,
          worker_id.trust_score AS worker_trust_score
-       FROM claim WHERE shift_id = type::record($shiftId)`,
-      { shiftId: validated.shift_id }
+       FROM claim WHERE shift_id = $shiftId`,
+      { shiftId }
     );
 
     return normalizeRecord<
@@ -60,7 +63,7 @@ export const getMyClaims = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
 
     const [claims] = await db.query<
       [
@@ -81,7 +84,7 @@ export const getMyClaims = createServerFn({ method: "GET" })
          shift_id.end_time AS shift_end_time,
          shift_id.status AS shift_status,
          shift_id.location_id.name AS location_name
-       FROM claim WHERE worker_id = type::record($userId)
+       FROM claim WHERE worker_id = $userId
        ORDER BY claimed_at DESC`,
       { userId }
     );
@@ -99,12 +102,13 @@ export const rejectClaim = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const claimId = toRecordId(data.claim_id, "claim");
 
     const [claims] = await db.query<[(Claim & { business_id: string })[]]>(
       `SELECT *, shift_id.location_id.business_id AS business_id
-       FROM claim WHERE id = type::record($claimId)`,
-      { claimId: data.claim_id }
+       FROM claim WHERE id = $claimId`,
+      { claimId }
     );
 
     const claim = normalizeRecord<Claim & { business_id: string }>(claims[0]);
@@ -112,25 +116,29 @@ export const rejectClaim = createServerFn({ method: "POST" })
       throw new Error("Not authorized to reject this claim");
     }
 
+    const businessId = toRecordId(claim.business_id, "business");
+
     const [bizOwnerRows, ubRows] = await db.query<
       [{ id: string }[], { id: string }[]]
     >(
-      `SELECT id FROM business WHERE id = type::record($businessId) AND owner_id = type::record($userId);
+      `SELECT id FROM business WHERE id = $businessId AND owner_id = $userId;
        SELECT id FROM user_business
-         WHERE business_id = type::record($businessId)
-         AND user_id = type::record($userId)
+         WHERE business_id = $businessId
+         AND user_id = $userId
          AND role IN ['owner', 'manager']`,
-      { businessId: claim.business_id, userId }
+      { businessId, userId }
     );
 
     if (!bizOwnerRows[0] && !ubRows[0]) {
       throw new Error("Not authorized to reject this claim");
     }
 
+    const shiftId = toRecordId(claim.shift_id, "shift");
+
     await db.query(
-      `UPDATE type::record($claimId) SET status = 'rejected', responded_at = time::now();
-       UPDATE type::record($shiftId) SET status = 'open', updated_at = time::now()`,
-      { claimId: data.claim_id, shiftId: claim.shift_id }
+      `UPDATE $claimId SET status = 'rejected', responded_at = time::now();
+       UPDATE $shiftId SET status = 'open', updated_at = time::now()`,
+      { claimId, shiftId }
     );
 
     return { success: true };

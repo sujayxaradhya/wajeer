@@ -3,7 +3,7 @@ import { RecordId, Surreal, Table } from "surrealdb";
 
 import type { Database } from "./schema";
 
-export { Table };
+export { RecordId, Table };
 
 export type { Database } from "./schema";
 export type {
@@ -91,6 +91,31 @@ export async function getSurreal(): Promise<Surreal> {
 export function resetConnections() {
   kyselyInstance = null;
   surrealInstance = null;
+}
+
+/**
+ * Convert a string ID (e.g. "user:abc123" or just "abc123") into a
+ * SurrealDB RecordId. Use this when binding query parameters instead
+ * of `type::record()` casting in SurrealQL, because the SDK v2
+ * auto-serializes string params matching `table:id` into RecordId
+ * objects — making `type::record()` receive `[object Object]`.
+ */
+export function toRecordId(
+  value: string,
+  defaultTable?: string
+): RecordId {
+  const colonIdx = value.indexOf(":");
+  if (colonIdx > 0) {
+    const table = value.slice(0, colonIdx);
+    const id = value.slice(colonIdx + 1);
+    return new RecordId(table, id);
+  }
+  if (defaultTable) {
+    return new RecordId(defaultTable, value);
+  }
+  throw new Error(
+    `Cannot convert "${value}" to RecordId: no table prefix and no defaultTable provided`
+  );
 }
 
 export function normalizeRecord<T>(record: unknown): T {

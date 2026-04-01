@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 import type { Location } from "@wajeer/db";
 import { z } from "zod";
 
@@ -16,11 +16,12 @@ export const createLocation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const validated = createLocationSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const businessId = toRecordId(validated.business_id, "business");
 
     const [bizRows] = await db.query<[{ id: string }[]]>(
-      `SELECT id FROM business WHERE id = type::record($businessId) AND owner_id = type::record($userId)`,
-      { businessId: validated.business_id, userId }
+      `SELECT id FROM business WHERE id = $businessId AND owner_id = $userId`,
+      { businessId, userId }
     );
 
     if (!bizRows[0]) {
@@ -29,12 +30,12 @@ export const createLocation = createServerFn({ method: "POST" })
 
     const [rows] = await db.query<[Location[]]>(
       `CREATE location CONTENT {
-         business_id: type::record($businessId),
+         business_id: $businessId,
          name: $name,
          address: $address
        } RETURN *`,
       {
-        businessId: validated.business_id,
+        businessId,
         name: validated.name,
         address: validated.address,
       }
@@ -53,12 +54,13 @@ export const getBusinessLocations = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const validated = getBusinessLocationsSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const businessId = toRecordId(validated.business_id, "business");
 
     const [memberRows] = await db.query<[{ id: string }[]]>(
       `SELECT id FROM user_business
-       WHERE business_id = type::record($businessId) AND user_id = type::record($userId)`,
-      { businessId: validated.business_id, userId }
+       WHERE business_id = $businessId AND user_id = $userId`,
+      { businessId, userId }
     );
 
     if (!memberRows[0]) {
@@ -66,8 +68,8 @@ export const getBusinessLocations = createServerFn({ method: "GET" })
     }
 
     const [locations] = await db.query<[Location[]]>(
-      `SELECT * FROM location WHERE business_id = type::record($businessId)`,
-      { businessId: validated.business_id }
+      `SELECT * FROM location WHERE business_id = $businessId`,
+      { businessId }
     );
 
     return normalizeRecord<Location[]>(locations);
@@ -78,15 +80,16 @@ export const getLocation = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const validated = z.object({ location_id: z.string() }).parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const locationId = toRecordId(validated.location_id, "location");
 
     const [locations] = await db.query<[Location[]]>(
       `SELECT * FROM location
-       WHERE id = type::record($locationId)
+       WHERE id = $locationId
        AND business_id IN (
-         SELECT VALUE business_id FROM user_business WHERE user_id = type::record($userId)
+         SELECT VALUE business_id FROM user_business WHERE user_id = $userId
        )`,
-      { locationId: validated.location_id, userId }
+      { locationId, userId }
     );
 
     if (!locations[0]) {

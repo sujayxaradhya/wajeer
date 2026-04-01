@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 import type { Notification } from "@wajeer/db";
 import { z } from "zod";
 
@@ -9,10 +9,10 @@ export const getNotifications = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
 
     const [notifications] = await db.query<[Notification[]]>(
-      `SELECT * FROM notification WHERE user_id = type::record($userId) ORDER BY created_at DESC`,
+      `SELECT * FROM notification WHERE user_id = $userId ORDER BY created_at DESC`,
       { userId }
     );
 
@@ -28,12 +28,13 @@ export const markNotificationRead = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const validated = markReadSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const notifId = toRecordId(validated.notification_id, "notification");
 
     await db.query(
       `UPDATE notification SET read = true
-       WHERE id = type::record($notifId) AND user_id = type::record($userId)`,
-      { notifId: validated.notification_id, userId }
+       WHERE id = $notifId AND user_id = $userId`,
+      { notifId, userId }
     );
 
     return { success: true };
@@ -44,12 +45,13 @@ export const markNotificationUnread = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const validated = markReadSchema.parse(data);
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
+    const notifId = toRecordId(validated.notification_id, "notification");
 
     await db.query(
       `UPDATE notification SET read = false
-       WHERE id = type::record($notifId) AND user_id = type::record($userId)`,
-      { notifId: validated.notification_id, userId }
+       WHERE id = $notifId AND user_id = $userId`,
+      { notifId, userId }
     );
 
     return { success: true };
@@ -59,11 +61,11 @@ export const markAllNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
 
     await db.query(
       `UPDATE notification SET read = true
-       WHERE user_id = type::record($userId) AND read = false`,
+       WHERE user_id = $userId AND read = false`,
       { userId }
     );
 
@@ -82,10 +84,11 @@ export const createNotification = createServerFn({ method: "POST" }).handler(
       })
       .parse(data);
     const db = await getSurreal();
+    const userId = toRecordId(validated.user_id, "user");
 
     const [rows] = await db.query<[Notification[]]>(
       `CREATE notification CONTENT {
-         user_id: type::record($userId),
+         user_id: $userId,
          type: $type,
          title: $title,
          body: $body,
@@ -93,7 +96,7 @@ export const createNotification = createServerFn({ method: "POST" }).handler(
          read: false
        } RETURN *`,
       {
-        userId: validated.user_id,
+        userId,
         type: validated.type,
         title: validated.title,
         body: validated.body,

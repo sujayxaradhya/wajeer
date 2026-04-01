@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSurreal, normalizeRecord } from "@wajeer/db";
+import { getSurreal, normalizeRecord, toRecordId } from "@wajeer/db";
 import { z } from "zod";
 
 import { requireAuth } from "@/middleware/auth";
@@ -8,7 +8,7 @@ export const getTrustScore = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
     const db = await getSurreal();
-    const userId = context.session.user.id;
+    const userId = toRecordId(context.session.user.id, "user");
 
     const [rows] = await db.query<
       [
@@ -27,7 +27,7 @@ export const getTrustScore = createServerFn({ method: "GET" })
          trust_score,
          reliability,
          role
-       FROM user_business WHERE user_id = type::record($userId)`,
+       FROM user_business WHERE user_id = $userId`,
       { userId }
     );
 
@@ -43,14 +43,16 @@ export const calculateTrustScore = createServerFn({ method: "POST" }).handler(
   async ({ data }) => {
     const validated = calculateTrustScoreSchema.parse(data);
     const db = await getSurreal();
+    const userId = toRecordId(validated.user_id, "user");
+    const businessId = toRecordId(validated.business_id, "business");
 
     const [claims] = await db.query<
       [{ status: string; responded_at: string | null }[]]
     >(
       `SELECT status, responded_at FROM claim
-       WHERE worker_id = type::record($userId)
-       AND shift_id.location_id.business_id = type::record($businessId)`,
-      { userId: validated.user_id, businessId: validated.business_id }
+       WHERE worker_id = $userId
+       AND shift_id.location_id.business_id = $businessId`,
+      { userId, businessId }
     );
 
     const totalClaims = claims.length;
@@ -87,13 +89,15 @@ export const updateTrustScore = createServerFn({ method: "POST" }).handler(
       })
       .parse(data);
     const db = await getSurreal();
+    const userId = toRecordId(validated.user_id, "user");
+    const businessId = toRecordId(validated.business_id, "business");
 
     await db.query(
       `UPDATE user_business SET trust_score = $score, reliability = $reliability
-       WHERE user_id = type::record($userId) AND business_id = type::record($businessId)`,
+       WHERE user_id = $userId AND business_id = $businessId`,
       {
-        userId: validated.user_id,
-        businessId: validated.business_id,
+        userId,
+        businessId,
         score: validated.score,
         reliability: validated.reliability,
       }
