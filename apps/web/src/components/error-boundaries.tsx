@@ -1,6 +1,6 @@
 "use client";
 
-import { Link, useRouter } from "@tanstack/react-router";
+import { isRedirect, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@wajeer/ui/components/button";
 import {
   Card,
@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@wajeer/ui/components/card";
 import { cn } from "@wajeer/ui/lib/utils";
-import { useCallback, Component } from "react";
+import { useCallback, Component, useEffect } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 
 import { authClient } from "@/lib/auth-client";
@@ -29,7 +29,7 @@ type ErrorBoundaryState = {
 };
 
 type RouteErrorProps = {
-  error?: Error | null;
+  error?: Error | null | any;
   title?: string;
   message?: string;
   className?: string;
@@ -43,10 +43,29 @@ export function RouteError({
 }: RouteErrorProps) {
   const router = useRouter();
 
+  // Handle redirects that bubble up to the Error Boundary (e.g. from useSuspenseQuery)
+  useEffect(() => {
+    if (isRedirect(error)) {
+      // isRedirect checks for the redirect symbol or boolean
+      // The options object is available on the error
+      router.navigate(error.options ?? { to: "/login" });
+    }
+  }, [error, router]);
+
+  console.error("RouteError caught:", error);
+  const displayError =
+    typeof error === "object" && error !== null
+      ? error.message || JSON.stringify(error)
+      : String(error);
+
   const handleReset = useCallback(() => {
     queryClient.clear();
     router.navigate({ to: "/", reloadDocument: true });
   }, [router]);
+
+  if (isRedirect(error)) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-[60svh] items-center justify-center p-4">
@@ -56,7 +75,7 @@ export function RouteError({
             {title}
           </CardTitle>
           <CardDescription>
-            {message ?? error?.message ?? "An unexpected error occurred."}
+            {message ?? displayError ?? "An unexpected error occurred."}
           </CardDescription>
         </CardHeader>
         <CardContent>

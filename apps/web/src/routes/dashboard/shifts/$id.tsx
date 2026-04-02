@@ -26,20 +26,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { getClaimsForShift, rejectClaim } from "@/functions/claims";
-import { approveClaim } from "@/functions/shifts";
+import { approveClaim, getShiftById } from "@/functions/shifts";
 import type { ClaimWithDetails, ShiftWithDetails } from "@/lib/types";
-
-export const Route = createFileRoute("/dashboard/shifts/$id")({
-  ssr: false,
-  component: ShiftDetailPage,
-});
-
-const timelineSteps = [
-  { status: "open", label: "Posted" },
-  { status: "claimed", label: "Claimed" },
-  { status: "approved", label: "Approved" },
-  { status: "completed", label: "Completed" },
-] as const;
 
 function ShiftDetailPage() {
   const { id } = Route.useParams();
@@ -51,11 +39,8 @@ function ShiftDetailPage() {
   const { data: shift, isLoading: shiftLoading } = useQuery<ShiftWithDetails>({
     queryKey: ["shift", id],
     queryFn: async () => {
-      const response = await fetch(`/api/shifts/${id}`);
-      if (!response.ok) {
-        throw new Error("Failed to load shift");
-      }
-      return response.json();
+      const res = await getShiftById({ data: { shift_id: id } });
+      return res as unknown as ShiftWithDetails;
     },
   });
 
@@ -65,7 +50,10 @@ function ShiftDetailPage() {
     refetch: refetchClaims,
   } = useQuery<ClaimWithDetails[]>({
     queryKey: ["claims", id],
-    queryFn: () => getClaimsForShift({ data: { shift_id: id } }),
+    queryFn: async () => {
+      const res = await getClaimsForShift({ data: { shift_id: id } });
+      return res as unknown as ClaimWithDetails[];
+    },
     enabled: !!shift,
   });
 

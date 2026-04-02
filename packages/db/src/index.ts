@@ -100,10 +100,7 @@ export function resetConnections() {
  * auto-serializes string params matching `table:id` into RecordId
  * objects — making `type::record()` receive `[object Object]`.
  */
-export function toRecordId(
-  value: string,
-  defaultTable?: string
-): RecordId {
+export function toRecordId(value: string, defaultTable?: string): RecordId {
   const colonIdx = value.indexOf(":");
   if (colonIdx > 0) {
     const table = value.slice(0, colonIdx);
@@ -122,8 +119,25 @@ export function normalizeRecord<T>(record: unknown): T {
   if (record === null || record === undefined) {
     return record as T;
   }
-  if (record instanceof RecordId) {
+  if (
+    record instanceof RecordId ||
+    (record &&
+      typeof record === "object" &&
+      record.constructor?.name === "RecordId")
+  ) {
     return record.toString() as unknown as T;
+  }
+  if (record instanceof Date) {
+    return record as unknown as T;
+  }
+  if (
+    record &&
+    typeof record === "object" &&
+    record.constructor?.name === "DateTime"
+  ) {
+    return new Date(
+      (record as { toString(): string }).toString()
+    ) as unknown as T;
   }
   if (Array.isArray(record)) {
     return record.map((item) => normalizeRecord(item)) as unknown as T;

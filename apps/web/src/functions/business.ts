@@ -10,6 +10,7 @@ const createBusinessSchema = z.object({
 });
 
 export const createBusiness = createServerFn({ method: "POST" })
+  .inputValidator(createBusinessSchema)
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
     const validated = createBusinessSchema.parse(data);
@@ -57,6 +58,7 @@ const getBusinessSchema = z.object({
 });
 
 export const getBusiness = createServerFn({ method: "GET" })
+  .inputValidator(getBusinessSchema)
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
     const validated = getBusinessSchema.parse(data);
@@ -84,6 +86,7 @@ const deleteBusinessSchema = z.object({
 });
 
 export const deleteBusiness = createServerFn({ method: "POST" })
+  .inputValidator(deleteBusinessSchema)
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
     const validated = deleteBusinessSchema.parse(data);

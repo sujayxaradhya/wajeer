@@ -12,6 +12,7 @@ const createLocationSchema = z.object({
 });
 
 export const createLocation = createServerFn({ method: "POST" })
+  .inputValidator(createLocationSchema)
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
     const validated = createLocationSchema.parse(data);
@@ -75,13 +76,15 @@ export const getBusinessLocations = createServerFn({ method: "GET" })
     return normalizeRecord<Location[]>(locations);
   });
 
+const getLocationSchema = z.object({ location_id: z.string() });
+
 export const getLocation = createServerFn({ method: "GET" })
+  .inputValidator(getLocationSchema)
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
-    const validated = z.object({ location_id: z.string() }).parse(data);
     const db = await getSurreal();
     const userId = toRecordId(context.session.user.id, "user");
-    const locationId = toRecordId(validated.location_id, "location");
+    const locationId = toRecordId(data.location_id, "location");
 
     const [locations] = await db.query<[Location[]]>(
       `SELECT * FROM location

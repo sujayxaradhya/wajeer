@@ -1,6 +1,5 @@
-import { getSurreal, Table } from "@wajeer/db";
+import { getSurreal, RecordId, Table } from "@wajeer/db";
 import { createAdapterFactory } from "better-auth/adapters";
-import { RecordId } from "surrealdb";
 
 const operatorMap: Record<string, string> = {
   eq: "=",
@@ -31,8 +30,25 @@ function normalizeRecord<T>(record: unknown): T {
   if (record === null || record === undefined) {
     return record as T;
   }
-  if (record instanceof RecordId) {
+  if (
+    record instanceof RecordId ||
+    (record &&
+      typeof record === "object" &&
+      record.constructor?.name === "RecordId")
+  ) {
     return record.toString() as unknown as T;
+  }
+  if (record instanceof Date) {
+    return record as unknown as T;
+  }
+  if (
+    record &&
+    typeof record === "object" &&
+    record.constructor?.name === "DateTime"
+  ) {
+    return new Date(
+      (record as { toString(): string }).toString()
+    ) as unknown as T;
   }
   if (Array.isArray(record)) {
     return record.map((item) => normalizeRecord(item)) as unknown as T;
@@ -50,7 +66,7 @@ function normalizeRecord<T>(record: unknown): T {
 
 function escapeValue(value: unknown): string {
   if (value instanceof RecordId) {
-    return `type::record(${JSON.stringify(value.toString())})`;
+    return escapeValue(value.toString());
   }
   if (typeof value === "string") {
     const escaped = value
@@ -86,11 +102,7 @@ function buildWhereClause(
   return where
     .map((clause) => {
       const operator = operatorMap[clause.operator ?? "eq"] ?? "=";
-      const value =
-        typeof clause.value === "string" && parseRecordId(clause.value) !== null
-          ? `type::record(${JSON.stringify(clause.value)})`
-          : escapeValue(clause.value);
-      return `${clause.field} ${operator} ${value}`;
+      return `${clause.field} ${operator} ${escapeValue(clause.value)}`;
     })
     .join(" AND ");
 }

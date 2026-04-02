@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@wajeer/ui/components/button";
 import {
   Card,
@@ -74,7 +74,7 @@ function CreateBusinessPage() {
     <div className="space-y-6 p-6 max-w-xl">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" asChild>
-          <a href="/dashboard/businesses">← Back</a>
+          <Link to="/dashboard/businesses">← Back</Link>
         </Button>
         <h1 className="text-xl font-bold">Create Your Business</h1>
       </div>

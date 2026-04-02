@@ -8,6 +8,7 @@ import {
 import { Toaster } from "@wajeer/ui/components/sonner";
 import { lazy, Suspense } from "react";
 
+import { RouteError, NotFoundError } from "../components/error-boundaries";
 import { getUser } from "../functions/get-user";
 import { queryClient } from "../lib/query-client";
 import { SurrealProvider } from "../lib/surreal-provider";
@@ -56,6 +57,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const { session } = await getUser();
     return { session: session ?? null };
   },
+
+  errorComponent: ({ error }) => <RouteError error={error as Error} />,
+  notFoundComponent: () => <NotFoundError />,
 
   shellComponent: RootShell,
   component: RootComponent,

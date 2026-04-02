@@ -142,3 +142,38 @@ export const approveClaim = createServerFn({ method: "POST" })
 
     return { success: true };
   });
+
+const getShiftByIdSchema = z.object({
+  shift_id: z.string(),
+});
+
+export const getShiftById = createServerFn({ method: "GET" })
+  .inputValidator(getShiftByIdSchema)
+  .middleware([requireAuth])
+  .handler(async ({ data, context }) => {
+    const db = await getSurreal();
+    const userId = toRecordId(context.session.user.id, "user");
+    const shiftId = toRecordId(data.shift_id, "shift");
+
+    const [shifts] = await db.query<
+      [
+        (Shift & {
+          location_name: string;
+          claims_count: number;
+        })[],
+      ]
+    >(
+      `SELECT *,
+         location_id.name AS location_name,
+         0 AS claims_count
+       FROM shift WHERE id = $shiftId AND posted_by = $userId`,
+      { shiftId, userId }
+    );
+
+    const shift = normalizeRecord(shifts[0]);
+    if (!shift) {
+      throw new Error("Shift not found or not authorized");
+    }
+
+    return shift;
+  });

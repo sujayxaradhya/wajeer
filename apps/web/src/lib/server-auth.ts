@@ -3,9 +3,13 @@ import { auth } from "@wajeer/auth";
 import { RecordId } from "@wajeer/db";
 
 function normalizeUserId(value: unknown): string | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
 
-  if (typeof value === "string") return value;
+  if (typeof value === "string") {
+    return value;
+  }
 
   if (value instanceof RecordId) {
     return value.toString();
@@ -15,7 +19,7 @@ function normalizeUserId(value: unknown): string | null {
     const record = value as Record<string, unknown>;
     if ("tb" in record && "id" in record) {
       const table = record.tb;
-      const id = record.id;
+      const { id } = record;
       if (
         typeof table === "string" &&
         (typeof id === "string" || typeof id === "number")
