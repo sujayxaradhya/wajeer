@@ -50,14 +50,12 @@ export const Route = createFileRoute("/dashboard/profile")({
 
 function ProfilePage() {
   const context = Route.useRouteContext();
-  const queryClient = useQueryClient();
   const { data: trustScores } = useSuspenseQuery({
     queryKey: ["trust-scores"],
     queryFn: () => getTrustScore(),
   });
 
-  const { session } = context;
-  const user = session?.session?.user;
+  const user = context.session?.user;
   const [name, setName] = useState(user?.name ?? "");
   const [email] = useState(user?.email ?? "");
 

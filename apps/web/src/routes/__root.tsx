@@ -78,7 +78,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
             <Toaster richColors />
             {process.env.NODE_ENV !== "production" && (
               <Suspense>
-                <TanStackRouterDevtools position="bottom-left" />
+                <TanStackRouterDevtools position="bottom-right" />
               </Suspense>
             )}
             <Scripts />

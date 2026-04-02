@@ -16,6 +16,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardScheduleRouteImport } from './routes/dashboard/schedule'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard/notifications'
@@ -63,6 +64,11 @@ const IndexRoute = IndexRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardScheduleRoute = DashboardScheduleRouteImport.update({
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/businesses/$id': typeof DashboardBusinessesIdRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/businesses/$id': typeof DashboardBusinessesIdRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/businesses/$id': typeof DashboardBusinessesIdRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications'
     | '/dashboard/profile'
     | '/dashboard/schedule'
+    | '/dashboard/settings'
     | '/dashboard/'
     | '/api/auth/$'
     | '/dashboard/businesses/$id'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications'
     | '/dashboard/profile'
     | '/dashboard/schedule'
+    | '/dashboard/settings'
     | '/dashboard'
     | '/api/auth/$'
     | '/dashboard/businesses/$id'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications'
     | '/dashboard/profile'
     | '/dashboard/schedule'
+    | '/dashboard/settings'
     | '/dashboard/'
     | '/api/auth/$'
     | '/dashboard/businesses/$id'
@@ -327,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/schedule': {
@@ -428,6 +447,7 @@ interface DashboardRouteChildren {
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardScheduleRoute: typeof DashboardScheduleRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardBusinessesIdRoute: typeof DashboardBusinessesIdRoute
   DashboardBusinessesNewRoute: typeof DashboardBusinessesNewRoute
@@ -442,6 +462,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardScheduleRoute: DashboardScheduleRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardBusinessesIdRoute: DashboardBusinessesIdRoute,
   DashboardBusinessesNewRoute: DashboardBusinessesNewRoute,

@@ -87,62 +87,6 @@ export const claimShift = createServerFn({ method: "POST" })
     return normalizeRecord<Claim>(claimRows[0]);
   });
 
-const approveClaimSchema = z.object({
-  claim_id: z.string(),
-});
-
-export const approveClaim = createServerFn({ method: "POST" })
-  .inputValidator(approveClaimSchema)
-  .middleware([requireAuth])
-  .handler(async ({ data, context }) => {
-    const db = await getSurreal();
-    const userId = toRecordId(context.session.user.id, "user");
-    const claimId = toRecordId(data.claim_id, "claim");
-
-    const [claims] = await db.query<[(Claim & { business_id: string })[]]>(
-      `SELECT *, shift_id.location_id.business_id AS business_id
-       FROM claim WHERE id = $claimId`,
-      { claimId }
-    );
-
-    const claim = normalizeRecord<Claim & { business_id: string }>(claims[0]);
-    if (!claim) {
-      throw new Error("Not authorized to approve this claim");
-    }
-
-    const businessId = toRecordId(claim.business_id, "business");
-
-    const [authRows] = await db.query<[{ id: string }[]]>(
-      `SELECT id FROM user_business
-       WHERE user_id = $userId
-       AND business_id = $businessId
-       AND role IN ['owner', 'manager']`,
-      { userId, businessId }
-    );
-
-    if (!authRows[0]) {
-      throw new Error("Not authorized to approve this claim");
-    }
-
-    const shiftId = toRecordId(claim.shift_id, "shift");
-    const workerId = toRecordId(claim.worker_id, "user");
-
-    await db.query(
-      `UPDATE $claimId SET status = 'approved', responded_at = time::now();
-       UPDATE $shiftId SET status = 'approved', updated_at = time::now();
-       UPDATE user_business SET trust_score += 0.1
-         WHERE user_id = $workerId AND business_id = $businessId`,
-      {
-        claimId,
-        shiftId,
-        workerId,
-        businessId,
-      }
-    );
-
-    return { success: true };
-  });
-
 const getShiftByIdSchema = z.object({
   shift_id: z.string(),
 });

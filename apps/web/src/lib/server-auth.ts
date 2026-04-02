@@ -44,11 +44,39 @@ export async function getAuthenticatedUserId(): Promise<string> {
 
   const userId =
     normalizeUserId(session.user.id) ??
-    normalizeUserId((session as Record<string, unknown>).session?.userId);
+    normalizeUserId(
+      (session as { session?: { userId?: string } }).session?.userId
+    );
 
   if (!userId) {
     throw new Error("Unauthorized: Could not resolve user ID");
   }
 
   return userId;
+}
+
+export async function getAuthenticatedUser() {
+  const request = getRequest();
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+
+  if (!session?.user) {
+    throw new Error("Unauthorized: No valid session");
+  }
+
+  const userId =
+    normalizeUserId(session.user.id) ??
+    normalizeUserId(
+      (session as { session?: { userId?: string } }).session?.userId
+    );
+
+  if (!userId) {
+    throw new Error("Unauthorized: Could not resolve user ID");
+  }
+
+  return {
+    ...session.user,
+    id: userId,
+  };
 }

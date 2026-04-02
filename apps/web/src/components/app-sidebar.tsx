@@ -19,7 +19,6 @@ import {
   BellIcon,
   LayoutDashboardIcon,
   Settings2Icon,
-  CircleHelpIcon,
   PlusIcon,
 } from "lucide-react";
 import * as React from "react";
@@ -70,13 +69,8 @@ const navSecondary = [
   },
   {
     title: "Settings",
-    url: "#",
+    url: "/dashboard/settings",
     icon: <Settings2Icon />,
-  },
-  {
-    title: "Get Help",
-    url: "#",
-    icon: <CircleHelpIcon />,
   },
 ];
 

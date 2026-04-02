@@ -156,6 +156,12 @@ function PostShiftPage() {
                         form.setFieldValue("location_id", null);
                       }}
                       disabled={isSubmitting || isLoadingBusinesses}
+                      items={
+                        businesses?.map((b) => ({
+                          value: b.id,
+                          label: b.name,
+                        })) ?? []
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue
@@ -170,7 +176,7 @@ function PostShiftPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {businesses?.map((b) => (
-                          <SelectItem key={b.id} value={b.id}>
+                          <SelectItem key={b.id} value={b.id} label={b.name}>
                             {b.name}
                           </SelectItem>
                         ))}
@@ -193,6 +199,12 @@ function PostShiftPage() {
                       value={field.state.value ?? undefined}
                       onValueChange={(val) => field.handleChange(val ?? null)}
                       disabled={isSubmitting || !selectedBusinessId}
+                      items={
+                        locations?.map((loc) => ({
+                          value: loc.id,
+                          label: loc.name,
+                        })) ?? []
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue
@@ -207,7 +219,11 @@ function PostShiftPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {locations?.map((loc) => (
-                          <SelectItem key={loc.id} value={loc.id}>
+                          <SelectItem
+                            key={loc.id}
+                            value={loc.id}
+                            label={loc.name}
+                          >
                             {loc.name}
                           </SelectItem>
                         ))}

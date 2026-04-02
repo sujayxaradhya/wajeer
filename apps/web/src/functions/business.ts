@@ -37,20 +37,28 @@ export const createBusiness = createServerFn({ method: "POST" })
     return normalizeRecord<Business>(business);
   });
 
+export type BusinessWithCounts = Business & {
+  location_count: number;
+  staff_count: number;
+};
+
 export const getMyBusinesses = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
     const db = await getSurreal();
     const userId = toRecordId(context.session.user.id, "user");
 
-    const [businesses] = await db.query<[Business[]]>(
-      `SELECT * FROM business WHERE id IN (
+    const [businesses] = await db.query<[BusinessWithCounts[]]>(
+      `SELECT *,
+         array::len((SELECT id FROM location WHERE business_id = id)) AS location_count,
+         array::len((SELECT id FROM user_business WHERE business_id = id)) AS staff_count
+       FROM business WHERE id IN (
          SELECT VALUE business_id FROM user_business WHERE user_id = $userId
        )`,
       { userId }
     );
 
-    return normalizeRecord<Business[]>(businesses);
+    return normalizeRecord<BusinessWithCounts[]>(businesses);
   });
 
 const getBusinessSchema = z.object({

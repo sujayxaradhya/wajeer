@@ -9,6 +9,7 @@ import { Building2Icon, PlusIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { getMyBusinesses } from "@/functions/business";
+import type { BusinessWithCounts } from "@/functions/business";
 
 function BusinessesSkeleton() {
   return (
@@ -31,7 +32,7 @@ function BusinessesListPage() {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  const { data: businesses = [], isLoading } = useQuery({
+  const { data: businesses = [], isLoading } = useQuery<BusinessWithCounts[]>({
     queryKey: ["businesses"],
     queryFn: () => getMyBusinesses(),
   });
@@ -95,8 +96,8 @@ function BusinessesListPage() {
                 id={business.id}
                 name={business.name}
                 ownerName="Owner"
-                locationCount={0}
-                staffCount={0}
+                locationCount={business.location_count}
+                staffCount={business.staff_count}
               />
             </Link>
           ))}

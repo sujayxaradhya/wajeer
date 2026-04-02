@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertDialog,
@@ -26,8 +26,12 @@ import { cn } from "@wajeer/ui/lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { getClaimsForShift, rejectClaim } from "@/functions/claims";
-import { approveClaim, claimShift, getShiftById } from "@/functions/shifts";
+import {
+  approveClaim,
+  getClaimsForShift,
+  rejectClaim,
+} from "@/functions/claims";
+import { claimShift, getShiftById } from "@/functions/shifts";
 import { authClient } from "@/lib/auth-client";
 import type { ClaimWithDetails, ShiftWithDetails } from "@/lib/types";
 
@@ -42,6 +46,8 @@ function ShiftDetailPage() {
   const { id } = Route.useParams();
   const { data: session } = authClient.useSession();
   const isBusiness = session?.user?.role === "business";
+
+  const queryClient = useQueryClient();
 
   const [pendingAction, setPendingAction] = useState<{
     claimId: string;
@@ -87,6 +93,7 @@ function ShiftDetailPage() {
       approveClaim({ data: { claim_id: claimId } }),
     onSuccess: () => {
       toast.success("Claim approved");
+      void queryClient.invalidateQueries({ queryKey: ["shift", id] });
       refetchClaims();
       setPendingAction(null);
     },
@@ -104,6 +111,7 @@ function ShiftDetailPage() {
       rejectClaim({ data: { claim_id: claimId } }),
     onSuccess: () => {
       toast.success("Claim rejected");
+      void queryClient.invalidateQueries({ queryKey: ["shift", id] });
       refetchClaims();
       setPendingAction(null);
     },
