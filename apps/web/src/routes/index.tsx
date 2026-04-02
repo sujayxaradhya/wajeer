@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRef } from "react";
 
-import { Logo } from "@/components/logo";
+import Logo from "@/assets/logos/mainlogo";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,13 +14,13 @@ export const Route = createFileRoute("/")({
     meta: [
       { charSet: "utf8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Wajeer — Fill Last-Minute Staffing Gaps Instantly" },
+      { title: "Wajeer: Fill Last-Minute Staffing Gaps Instantly" },
       {
         name: "description",
         content:
           "Post the shift. Your team claims it. Fill last-minute staffing gaps instantly with one-tap shift claiming.",
       },
-      { property: "og:title", content: "Wajeer — Shift Marketplace" },
+      { property: "og:title", content: "Shift Marketplace" },
       {
         property: "og:description",
         content:
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Wajeer — Shift Marketplace" },
+      { name: "twitter:title", content: "Shift Marketplace" },
       {
         name: "twitter:description",
         content: "Fill last-minute staffing gaps instantly.",
@@ -49,70 +49,75 @@ function LandingPage() {
   useGSAP(() => {
     const ctx = gsap.context(() => {
       gsap.from(".hero-badge", {
-        opacity: 0,
         y: 20,
-        duration: 0.6,
+        duration: 0.5,
         ease: "power2.out",
       });
 
       gsap.from(".hero-title", {
-        opacity: 0,
         y: 30,
-        duration: 0.8,
-        delay: 0.2,
+        duration: 0.6,
+        delay: 0.1,
         ease: "power2.out",
       });
 
       gsap.from(".hero-subtitle", {
-        opacity: 0,
         y: 20,
-        duration: 0.6,
-        delay: 0.4,
+        duration: 0.5,
+        delay: 0.2,
         ease: "power2.out",
       });
 
       gsap.from(".hero-cta", {
-        opacity: 0,
         y: 20,
-        duration: 0.6,
-        delay: 0.6,
+        duration: 0.5,
+        delay: 0.3,
         ease: "power2.out",
       });
 
-      gsap.from(".feature-card", {
-        scrollTrigger: {
-          trigger: featuresRef.current,
-          start: "top 80%",
-        },
-        opacity: 0,
-        y: 40,
-        stagger: 0.15,
-        duration: 0.6,
-        ease: "power2.out",
-      });
+      gsap.fromTo(
+        ".feature-card",
+        { y: 40 },
+        {
+          scrollTrigger: {
+            trigger: featuresRef.current,
+            start: "top 85%",
+          },
+          y: 0,
+          stagger: 0.08,
+          duration: 0.5,
+          ease: "power2.out",
+        }
+      );
 
-      gsap.from(".step-item", {
-        scrollTrigger: {
-          trigger: howItWorksRef.current,
-          start: "top 80%",
-        },
-        opacity: 0,
-        x: -30,
-        stagger: 0.2,
-        duration: 0.6,
-        ease: "power2.out",
-      });
+      gsap.fromTo(
+        ".step-item",
+        { x: -30 },
+        {
+          scrollTrigger: {
+            trigger: howItWorksRef.current,
+            start: "top 85%",
+          },
+          x: 0,
+          stagger: 0.1,
+          duration: 0.5,
+          ease: "power2.out",
+        }
+      );
 
-      gsap.from(".cta-content", {
-        scrollTrigger: {
-          trigger: ctaRef.current,
-          start: "top 85%",
-        },
-        opacity: 0,
-        scale: 0.95,
-        duration: 0.6,
-        ease: "power2.out",
-      });
+      gsap.fromTo(
+        ".cta-content",
+        { scale: 0.95 },
+        {
+          scrollTrigger: {
+            trigger: ctaRef.current,
+            start: "top 85%",
+          },
+          scale: 1,
+          duration: 0.5,
+          ease: "power2.out",
+        }
+      );
     });
 
     return () => ctx.revert();
@@ -140,10 +145,17 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Top Navigation */}
+      <header className="fixed left-0 right-0 top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <Logo />
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-24"
+        className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-24"
       >
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(82,200,150,0.08),transparent_70%)]" />
@@ -408,26 +420,9 @@ function LandingPage() {
       {/* Footer */}
       <footer className="border-t px-6 py-12">
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <Logo size="md" />
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link
-                to="/login"
-                className="hover:text-foreground transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/signup"
-                className="hover:text-foreground transition-colors"
-              >
-                Sign Up
-              </Link>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © 2026 Wajeer. All rights reserved.
-            </p>
-          </div>
+          <p className="text-center text-sm text-muted-foreground">
+            © 2026 All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

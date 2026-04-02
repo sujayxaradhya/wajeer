@@ -33,13 +33,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Wajeer — Shift Marketplace" },
+      { title: "Shift Marketplace" },
       {
         name: "description",
         content:
           "Fill last-minute staffing gaps instantly. Workers pick up extra shifts on their terms.",
       },
-      { property: "og:title", content: "Wajeer — Shift Marketplace" },
+      { property: "og:title", content: "Shift Marketplace" },
       {
         property: "og:description",
         content:

@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@wajeer/ui/components/badge";
 import { Button } from "@wajeer/ui/components/button";
@@ -89,8 +93,7 @@ function SettingsPage() {
   const accounts = accountsResult?.data ?? [];
 
   // user.role (singular) — same pattern as app-sidebar
-  const role =
-    user && "role" in user ? (user.role as string) : undefined;
+  const role = user && "role" in user ? (user.role as string) : undefined;
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-2xl">

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
+import Logo from "@/assets/logos/mainlogo";
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
@@ -122,7 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link to="/dashboard">
                 <PlusIcon className="size-5!" />
-                <span className="text-base font-semibold">Wajeer</span>
+                <Logo />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

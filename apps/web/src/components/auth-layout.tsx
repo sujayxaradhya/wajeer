@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-import { Logo } from "@/components/logo";
+import Logo from "@/assets/logos/mainlogo";
 
 type AuthLayoutProps = {
   children: React.ReactNode;
@@ -20,7 +20,7 @@ export function AuthLayout({
       <div className="flex min-h-svh w-full flex-col items-center justify-center p-6 sm:p-8">
         <div className="absolute top-6 left-6">
           <Link to="/">
-            <Logo size="md" />
+            <Logo />
           </Link>
         </div>
 
