@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { Button } from "@wajeer/ui/components/button";
 import { FieldError, FieldLabel } from "@wajeer/ui/components/field";
 import { Input } from "@wajeer/ui/components/input";
+import { RadioGroup, RadioGroupItem } from "@wajeer/ui/components/radio-group";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -51,15 +52,18 @@ export default function SignUpForm({
       name: "",
       email: "",
       password: "",
+      role: "worker",
     },
     onSubmit: async ({ value }) => {
       setAuthPending(true);
       try {
-        const { data, error } = await authClient.signUp.email({
+        const payload: any = {
           email: value.email,
           password: value.password,
           name: value.name,
-        });
+          role: value.role,
+        };
+        const { data, error } = await authClient.signUp.email(payload);
 
         if (error) {
           toast.error(error.message ?? "Sign up failed");
@@ -180,6 +184,29 @@ export default function SignUpForm({
                 {field.state.meta.errors.map((error, i) => (
                   <FieldError key={i}>{String(error)}</FieldError>
                 ))}
+              </div>
+            )}
+          </form.Field>
+
+          <form.Field name="role">
+            {(field) => (
+              <div className="flex flex-col gap-3 mt-1">
+                <FieldLabel>I am a...</FieldLabel>
+                <RadioGroup
+                  value={field.state.value}
+                  onValueChange={field.handleChange}
+                  className="flex gap-4"
+                  disabled={isSubmitting}
+                >
+                  <label className="flex items-center gap-2 cursor-pointer border rounded-lg p-3 flex-1 hover:bg-muted/50 [&:has([data-state=checked])]:border-primary transition-colors">
+                    <RadioGroupItem value="worker" id="role-worker" />
+                    <span className="text-sm font-medium">Worker</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer border rounded-lg p-3 flex-1 hover:bg-muted/50 [&:has([data-state=checked])]:border-primary transition-colors">
+                    <RadioGroupItem value="business" id="role-business" />
+                    <span className="text-sm font-medium">Business</span>
+                  </label>
+                </RadioGroup>
               </div>
             )}
           </form.Field>

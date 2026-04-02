@@ -166,7 +166,7 @@ export const getShiftById = createServerFn({ method: "GET" })
       `SELECT *,
          location_id.name AS location_name,
          0 AS claims_count
-       FROM shift WHERE id = $shiftId AND posted_by = $userId`,
+       FROM shift WHERE id = $shiftId`,
       { shiftId, userId }
     );
 

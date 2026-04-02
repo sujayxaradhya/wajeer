@@ -10,12 +10,12 @@ const getClaimsForShiftSchema = z.object({
 });
 
 export const getClaimsForShift = createServerFn({ method: "GET" })
+  .inputValidator(getClaimsForShiftSchema)
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
-    const validated = getClaimsForShiftSchema.parse(data);
     const db = await getSurreal();
     const userId = toRecordId(context.session.user.id, "user");
-    const shiftId = toRecordId(validated.shift_id, "shift");
+    const shiftId = toRecordId(data.shift_id, "shift");
 
     const [shiftRows] = await db.query<[{ business_id: string }[]]>(
       `SELECT location_id.business_id AS business_id FROM shift WHERE id = $shiftId`,

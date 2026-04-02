@@ -22,15 +22,27 @@ import { EmptyState } from "@wajeer/ui/components/empty-state";
 import { Separator } from "@wajeer/ui/components/separator";
 import { Skeleton } from "@wajeer/ui/components/skeleton";
 import { StatusBadge } from "@wajeer/ui/components/status-badge";
+import { cn } from "@wajeer/ui/lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { getClaimsForShift, rejectClaim } from "@/functions/claims";
-import { approveClaim, getShiftById } from "@/functions/shifts";
+import { approveClaim, claimShift, getShiftById } from "@/functions/shifts";
+import { authClient } from "@/lib/auth-client";
 import type { ClaimWithDetails, ShiftWithDetails } from "@/lib/types";
+
+const timelineSteps = [
+  { status: "open", label: "Open" },
+  { status: "claimed", label: "Claimed" },
+  { status: "approved", label: "Approved" },
+  { status: "completed", label: "Completed" },
+] as const;
 
 function ShiftDetailPage() {
   const { id } = Route.useParams();
+  const { data: session } = authClient.useSession();
+  const isBusiness = session?.user?.role === "business";
+
   const [pendingAction, setPendingAction] = useState<{
     claimId: string;
     action: "approve" | "reject";
@@ -54,7 +66,20 @@ function ShiftDetailPage() {
       const res = await getClaimsForShift({ data: { shift_id: id } });
       return res as unknown as ClaimWithDetails[];
     },
-    enabled: !!shift,
+    enabled: !!shift && isBusiness,
+  });
+
+  const claimMutation = useMutation({
+    mutationFn: () => claimShift({ data: { shift_id: id } }),
+    onSuccess: () => {
+      toast.success("Shift claimed — awaiting approval");
+    },
+    onError: (error) => {
+      toast.error("Claim failed", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      });
+    },
   });
 
   const approveMutation = useMutation({
@@ -148,17 +173,30 @@ function ShiftDetailPage() {
           <h1 className="font-display text-2xl font-semibold">
             {shift.title || shift.role}
           </h1>
-          <StatusBadge status={shift.status as StatusBadge["status"]} />
+          <StatusBadge
+            status={shift.status as Parameters<typeof StatusBadge>[0]["status"]}
+          />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/dashboard/shifts/$id/edit" params={{ id: shift.id }}>
-              Edit
-            </Link>
-          </Button>
-          {shift.status === "open" && (
-            <Button variant="destructive" size="sm">
-              Cancel Shift
+          {isBusiness && (
+            <>
+              <Button variant="outline" size="sm" disabled>
+                Edit
+              </Button>
+              {shift.status === "open" && (
+                <Button variant="destructive" size="sm">
+                  Cancel Shift
+                </Button>
+              )}
+            </>
+          )}
+          {!isBusiness && shift.status === "open" && (
+            <Button
+              size="sm"
+              onClick={() => claimMutation.mutate()}
+              disabled={claimMutation.isPending}
+            >
+              {claimMutation.isPending ? "Claiming..." : "Claim Shift"}
             </Button>
           )}
         </div>
@@ -247,86 +285,88 @@ function ShiftDetailPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Claims ({claims?.length ?? 0})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {claimsLoading ? (
-              <div className="flex flex-col gap-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16" />
-                ))}
-              </div>
-            ) : (!claims?.length ? (
-              <EmptyState
-                title="No claims yet"
-                description="Workers will be notified about this shift"
-              />
-            ) : (
-              <div className="flex flex-col gap-3">
-                {claims.map((claim) => (
-                  <div
-                    key={claim.id}
-                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <ClaimBadge
-                      workerName={claim.worker_name}
-                      trustScore={claim.worker_trust_score}
-                      claimedAt={
-                        claim.claimed_at
-                          ? new Date(claim.claimed_at).toLocaleDateString()
-                          : undefined
-                      }
-                    />
-                    {claim.status === "pending" && (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() =>
-                            setPendingAction({
-                              claimId: claim.id,
-                              action: "approve",
-                            })
-                          }
-                          disabled={
-                            approveMutation.isPending ||
-                            rejectMutation.isPending
-                          }
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setPendingAction({
-                              claimId: claim.id,
-                              action: "reject",
-                            })
-                          }
-                          disabled={
-                            approveMutation.isPending ||
-                            rejectMutation.isPending
-                          }
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    )}
-                    {claim.status === "approved" && (
-                      <StatusBadge status="approved" size="sm" />
-                    )}
-                    {claim.status === "rejected" && (
-                      <StatusBadge status="cancelled" size="sm" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        {isBusiness && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Claims ({claims?.length ?? 0})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {claimsLoading ? (
+                <div className="flex flex-col gap-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16" />
+                  ))}
+                </div>
+              ) : (!claims?.length ? (
+                <EmptyState
+                  title="No claims yet"
+                  description="Workers will be notified about this shift"
+                />
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {claims.map((claim) => (
+                    <div
+                      key={claim.id}
+                      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <ClaimBadge
+                        workerName={claim.worker_name}
+                        trustScore={claim.worker_trust_score}
+                        claimedAt={
+                          claim.claimed_at
+                            ? new Date(claim.claimed_at).toLocaleDateString()
+                            : undefined
+                        }
+                      />
+                      {claim.status === "pending" && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() =>
+                              setPendingAction({
+                                claimId: claim.id,
+                                action: "approve",
+                              })
+                            }
+                            disabled={
+                              approveMutation.isPending ||
+                              rejectMutation.isPending
+                            }
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              setPendingAction({
+                                claimId: claim.id,
+                                action: "reject",
+                              })
+                            }
+                            disabled={
+                              approveMutation.isPending ||
+                              rejectMutation.isPending
+                            }
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                      {claim.status === "approved" && (
+                        <StatusBadge status="approved" size="sm" />
+                      )}
+                      {claim.status === "rejected" && (
+                        <StatusBadge status="cancelled" size="sm" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <AlertDialog
@@ -362,3 +402,8 @@ function ShiftDetailPage() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/dashboard/shifts/$id")({
+  ssr: false,
+  component: ShiftDetailPage,
+});

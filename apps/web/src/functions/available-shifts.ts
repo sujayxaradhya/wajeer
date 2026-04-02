@@ -9,25 +9,18 @@ export const getAvailableShifts = createServerFn({ method: "GET" }).handler(
     const rawUserId = await getAuthenticatedUserId();
     const userId = toRecordId(rawUserId, "user");
 
-    const [shifts] = await db.query<[Record<string, unknown>[]]>(
+    const [shifts] = await db.query<[any[]]>(
       `SELECT *,
          location_id.name AS location_name,
          location_id.address AS location_address,
          location_id.business_id.name AS business_name
        FROM shift
        WHERE status = 'open'
-       AND location_id IN (
-         SELECT VALUE id FROM location
-         WHERE business_id IN (
-           SELECT VALUE business_id FROM user_business
-           WHERE user_id = $userId AND role = 'worker'
-         )
-       )
        ORDER BY date ASC, start_time ASC`,
       { userId }
     );
 
-    return normalizeRecord<Record<string, unknown>[]>(shifts);
+    return normalizeRecord<any[]>(shifts);
   }
 );
 
@@ -37,7 +30,7 @@ export const getMySchedule = createServerFn({ method: "GET" }).handler(
     const rawUserId = await getAuthenticatedUserId();
     const userId = toRecordId(rawUserId, "user");
 
-    const [rows] = await db.query<[Record<string, unknown>[]]>(
+    const [rows] = await db.query<[any[]]>(
       `SELECT
          shift_id.id AS id,
          id AS claim_id,
@@ -56,6 +49,6 @@ export const getMySchedule = createServerFn({ method: "GET" }).handler(
       { userId }
     );
 
-    return normalizeRecord<Record<string, unknown>[]>(rows);
+    return normalizeRecord<any[]>(rows);
   }
 );

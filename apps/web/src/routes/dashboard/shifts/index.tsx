@@ -120,7 +120,7 @@ function ShiftsListPage() {
             <Link
               key={shift.id}
               to="/dashboard/shifts/$id"
-              params={{ id: shift.id }}
+              params={{ id: String(shift.id ?? "").replace(/^shift:/, "") }}
             >
               <ShiftCard
                 id={shift.id}

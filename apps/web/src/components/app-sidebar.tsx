@@ -95,6 +95,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         avatar: "",
       };
 
+  const role =
+    session?.user && "role" in session.user
+      ? (session.user.role as string)
+      : undefined;
+
+  const filteredNavMain = React.useMemo(
+    () =>
+      navMain.filter((item) => {
+        if (role === "worker" && item.title === "Businesses") {
+          return false;
+        }
+        if (
+          role === "business" &&
+          (item.title === "Available Shifts" || item.title === "Schedule")
+        ) {
+          return false;
+        }
+        return true;
+      }),
+    [role]
+  );
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -113,7 +135,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={filteredNavMain} role={role} />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

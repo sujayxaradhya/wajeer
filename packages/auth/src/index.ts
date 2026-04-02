@@ -12,6 +12,13 @@ export function createAuth() {
         createdAt: "created_at",
         updatedAt: "updated_at",
       },
+      additionalFields: {
+        role: {
+          type: "string",
+          required: true,
+          defaultValue: "worker",
+        },
+      },
     },
     session: {
       fields: {

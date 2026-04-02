@@ -24,6 +24,7 @@ import { Route as DashboardShiftsIndexRouteImport } from './routes/dashboard/shi
 import { Route as DashboardBusinessesIndexRouteImport } from './routes/dashboard/businesses/index'
 import { Route as ApiShiftsIndexRouteImport } from './routes/api/shifts/index'
 import { Route as DashboardShiftsNewRouteImport } from './routes/dashboard/shifts/new'
+import { Route as DashboardShiftsIdRouteImport } from './routes/dashboard/shifts/$id'
 import { Route as DashboardBusinessesNewRouteImport } from './routes/dashboard/businesses/new'
 import { Route as DashboardBusinessesIdRouteImport } from './routes/dashboard/businesses/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -105,6 +106,11 @@ const DashboardShiftsNewRoute = DashboardShiftsNewRouteImport.update({
   path: '/shifts/new',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardShiftsIdRoute = DashboardShiftsIdRouteImport.update({
+  id: '/shifts/$id',
+  path: '/shifts/$id',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardBusinessesNewRoute = DashboardBusinessesNewRouteImport.update({
   id: '/businesses/new',
   path: '/businesses/new',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/businesses/$id': typeof DashboardBusinessesIdRoute
   '/dashboard/businesses/new': typeof DashboardBusinessesNewRoute
+  '/dashboard/shifts/$id': typeof DashboardShiftsIdRoute
   '/dashboard/shifts/new': typeof DashboardShiftsNewRoute
   '/api/shifts/': typeof ApiShiftsIndexRoute
   '/dashboard/businesses/': typeof DashboardBusinessesIndexRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/businesses/$id': typeof DashboardBusinessesIdRoute
   '/dashboard/businesses/new': typeof DashboardBusinessesNewRoute
+  '/dashboard/shifts/$id': typeof DashboardShiftsIdRoute
   '/dashboard/shifts/new': typeof DashboardShiftsNewRoute
   '/api/shifts': typeof ApiShiftsIndexRoute
   '/dashboard/businesses': typeof DashboardBusinessesIndexRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/businesses/$id': typeof DashboardBusinessesIdRoute
   '/dashboard/businesses/new': typeof DashboardBusinessesNewRoute
+  '/dashboard/shifts/$id': typeof DashboardShiftsIdRoute
   '/dashboard/shifts/new': typeof DashboardShiftsNewRoute
   '/api/shifts/': typeof ApiShiftsIndexRoute
   '/dashboard/businesses/': typeof DashboardBusinessesIndexRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/businesses/$id'
     | '/dashboard/businesses/new'
+    | '/dashboard/shifts/$id'
     | '/dashboard/shifts/new'
     | '/api/shifts/'
     | '/dashboard/businesses/'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/businesses/$id'
     | '/dashboard/businesses/new'
+    | '/dashboard/shifts/$id'
     | '/dashboard/shifts/new'
     | '/api/shifts'
     | '/dashboard/businesses'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/businesses/$id'
     | '/dashboard/businesses/new'
+    | '/dashboard/shifts/$id'
     | '/dashboard/shifts/new'
     | '/api/shifts/'
     | '/dashboard/businesses/'
@@ -373,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardShiftsNewRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/shifts/$id': {
+      id: '/dashboard/shifts/$id'
+      path: '/shifts/$id'
+      fullPath: '/dashboard/shifts/$id'
+      preLoaderRoute: typeof DashboardShiftsIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/businesses/new': {
       id: '/dashboard/businesses/new'
       path: '/businesses/new'
@@ -412,6 +431,7 @@ interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardBusinessesIdRoute: typeof DashboardBusinessesIdRoute
   DashboardBusinessesNewRoute: typeof DashboardBusinessesNewRoute
+  DashboardShiftsIdRoute: typeof DashboardShiftsIdRoute
   DashboardShiftsNewRoute: typeof DashboardShiftsNewRoute
   DashboardBusinessesIndexRoute: typeof DashboardBusinessesIndexRoute
   DashboardShiftsIndexRoute: typeof DashboardShiftsIndexRoute
@@ -425,6 +445,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardBusinessesIdRoute: DashboardBusinessesIdRoute,
   DashboardBusinessesNewRoute: DashboardBusinessesNewRoute,
+  DashboardShiftsIdRoute: DashboardShiftsIdRoute,
   DashboardShiftsNewRoute: DashboardShiftsNewRoute,
   DashboardBusinessesIndexRoute: DashboardBusinessesIndexRoute,
   DashboardShiftsIndexRoute: DashboardShiftsIndexRoute,
