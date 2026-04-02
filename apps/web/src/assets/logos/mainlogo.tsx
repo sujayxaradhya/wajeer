@@ -4,8 +4,8 @@ type logoProps = {
 
 const Logo = (props: logoProps) => (
   <svg
-    width={156}
-    height={45}
+    width={128}
+    height={42}
     viewBox="0 0 314 45"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
