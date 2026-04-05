@@ -43,15 +43,25 @@ export function BusinessCard({
       <div className="mt-3 flex items-center gap-4">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Building2Icon className="size-4" />
-          <span>
-            {locationCount} {locationCount === 1 ? "location" : "locations"}
-          </span>
+          {locationCount > 0 ? (
+            <span>
+              {locationCount} {locationCount === 1 ? "location" : "locations"}
+            </span>
+          ) : (
+            <span className="text-muted-foreground/60 italic">
+              Add location
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <UsersIcon className="size-4" />
-          <span>
-            {staffCount} {staffCount === 1 ? "staff" : "staff"}
-          </span>
+          {staffCount > 0 ? (
+            <span>
+              {staffCount} {staffCount === 1 ? "staff" : "staff"}
+            </span>
+          ) : (
+            <span className="text-muted-foreground/60 italic">Add staff</span>
+          )}
         </div>
       </div>
     </div>

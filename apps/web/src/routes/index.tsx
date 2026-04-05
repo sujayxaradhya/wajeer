@@ -308,11 +308,11 @@ function LandingPage() {
                 </svg>
               </div>
               <h3 className="font-display text-lg font-semibold">
-                Fair Pricing
+                Free to Start
               </h3>
               <p className="mt-2 text-muted-foreground">
-                $49-$199/month per location plus small transaction fees. No
-                hidden costs, no long-term contracts.
+                No credit card required. Get started free — pricing scales with
+                your business when you're ready.
               </p>
             </div>
           </div>
@@ -401,7 +401,7 @@ function LandingPage() {
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link to="/signup">
               <Button size="lg" className="btn-press px-8 text-base">
-                Start Free Trial
+                Get started for free
               </Button>
             </Link>
             <Link to="/login">

@@ -19,7 +19,6 @@ import {
   BellIcon,
   LayoutDashboardIcon,
   Settings2Icon,
-  PlusIcon,
 } from "lucide-react";
 import * as React from "react";
 
@@ -122,8 +121,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
             >
               <Link to="/dashboard">
-                <PlusIcon className="size-5!" />
-                <Logo />
+                <Logo className="w-28! h-8!" />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

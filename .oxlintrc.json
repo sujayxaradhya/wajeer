@@ -26,6 +26,7 @@
     "no-warning-comments": "allow",
     "typescript/no-import-type-side-effects": "off",
     "sort-keys": "off",
-    "no-inline-comments": "allow"
+    "no-inline-comments": "allow",
+    "no-use-before-define": "off"
   }
 }

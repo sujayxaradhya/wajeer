@@ -67,8 +67,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <head>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head suppressHydrationWarning>
         <HeadContent />
       </head>
       <body>

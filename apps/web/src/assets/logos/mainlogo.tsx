@@ -1,14 +1,17 @@
 type logoProps = {
-  classname?: string;
+  className?: string;
+  width?: number;
+  height?: number;
 };
 
-const Logo = (props: logoProps) => (
+const Logo = ({ className, width = 128, height = 42, ...props }: logoProps) => (
   <svg
-    width={128}
-    height={42}
+    width={width}
+    height={height}
     viewBox="0 0 314 45"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className={className}
     {...props}
   >
     <path
