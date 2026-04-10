@@ -12,15 +12,15 @@
     "migrate": "bun run ./migrate.ts"
   },
   "dependencies": {
-    "kysely": "catalog:",
-    "kysely-surrealdb": "catalog:",
-    "surrealdb": "catalog:"
+    "kysely": "^0.28.0",
+    "kysely-surrealdb": "^0.7.4",
+    "surrealdb": "^2.0.3"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
+    "@types/node": "^22.15.35",
     "@wajeer/config": "workspace:*",
     "@wajeer/env": "workspace:*",
-    "dotenv": "catalog:",
+    "dotenv": "^17.2.2",
     "typescript": "^5"
   }
 }

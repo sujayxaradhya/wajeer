@@ -9,11 +9,11 @@
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.1",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
+    "dotenv": "^17.2.2",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
+    "@types/node": "^22.15.35",
     "@wajeer/config": "workspace:*",
     "typescript": "^5"
   }

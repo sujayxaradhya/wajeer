@@ -13,9 +13,9 @@
   "dependencies": {
     "@wajeer/db": "workspace:*",
     "@wajeer/env": "workspace:*",
-    "better-auth": "catalog:",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
+    "better-auth": "1.5.5",
+    "dotenv": "^17.2.2",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@wajeer/config": "workspace:*",
